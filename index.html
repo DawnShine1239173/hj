@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>服务器状态</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
+body{
+    color:#fff;
+    padding:40px 20px;
+    min-height:100vh;
+    /* 永久兜底渐变，图片加载失败也不会纯白 */
+    background: linear-gradient(#101828, #202b48);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    text-shadow: 0 0 8px #000;
+}
+.container{max-width:650px;margin:0 auto}
+h1{text-align:center;color:#55FFFF;margin-bottom:30px;font-size:28px}
+.load{text-align:center;font-size:17px;color:#ccc}
+.result{
+    background:rgba(39,41,61,0.88);
+    padding:25px;border-radius:10px;
+    display:none;
+    backdrop-filter: blur(6px);
+}
+.line{margin:16px 0;font-size:16px}
+.label{color:#55FFFF;font-weight:bold;width:120px;display:inline-block}
+.motd{color:#FFFF55;white-space:pre-line;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>黎明初露𝔻𝕒𝕨𝕟 𝕊𝕙𝕚𝕟𝕖状态</h1>
+    <div class="load" id="loading">正在查询服务器...</div>
+    <div class="result" id="box">
+        <div class="line">
+            <span class="label">延迟：</span>
+            <span id="ping"></span>
+        </div>
+        <div class="line">
+            <span class="label">游戏版本：</span>
+            <span id="v"></span>
+        </div>
+        <div class="line">
+            <span class="label">在线人数：</span>
+            <span id="p"></span>
+        </div>
+        <div class="line">
+            <span class="label">服务器标语：</span>
+            <div class="motd" id="m"></div>
+        </div>
+    </div>
+</div>
+<script>
+// 国内可直连MC背景图，无墙，加载稳定
+const bgList = [
+    "https://ts1.tc.mm.bing.net/th/id/OIP-C.PV3mMELfSpi0vDnxiVBfxQHaNK?r=0&dpr=2&pid=ImgDetMain&o=7&rm=3",
+    "https://ts1.tc.mm.bing.net/th/id/OIP-C.cqwDlCQ63kidK9qoKK_GkwHaNK?r=0&dpr=2&pid=ImgDetMain&o=7&rm=3",
+   "https://pic2.zhimg.com/v2-308186f790b6f796e05ed0b996ed2107_r.jpg?source=1940ef5c"
+];
+
+// 随机背景，不阻塞页面，页面加载完直接赋值
+function setRandomBg(){
+    const randomImg = bgList[Math.floor(Math.random() * bgList.length)];
+    const tempImg = new Image();
+    tempImg.onload = () => {
+        document.body.style.backgroundImage = `url(${randomImg})`;
+    }
+    tempImg.src = randomImg;
+}
+setRandomBg();
+
+// 服务器查询，增加10秒超时防止卡死
+const loading = document.getElementById('loading');
+const box = document.getElementById('box');
+const server = "mm.rainplay.cn:46487";
+
+async function getStatus(){
+    // 超时计时器
+    const timeout = setTimeout(()=>{
+        loading.innerText = "请求超时，请刷新页面";
+    },10000);
+    try{
+        const url = `https://uapis.cn/api/v1/game/minecraft/serverstatus?server=${encodeURIComponent(server)}`;
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+        const json = await res.json();
+        clearTimeout(timeout);
+        const data = json.data;
+
+        loading.style.display = 'none';
+        box.style.display = 'block';
+        document.getElementById('ping').innerText = `${data.ping}ms`;
+        document.getElementById('v').innerText = data.version || "未知";
+        document.getElementById('p').innerText = `${data.players}/${data.max_players}`;
+        document.getElementById('m').innerText = data.motd_clean || "无标语";
+    }catch(err){
+        clearTimeout(timeout);
+        loading.innerText = "查询失败，网络限制";
+        console.error(err);
+    }
+}
+window.onload = getStatus;
+</script>
+</body>
+</html>
