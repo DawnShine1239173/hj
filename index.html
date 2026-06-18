@@ -10,7 +10,6 @@ body{
     color:#fff;
     padding:40px 20px;
     min-height:100vh;
-    /* 兜底渐变，图片加载失败不会纯白 */
     background: linear-gradient(#101828, #202b48);
     background-size: cover;
     background-position: center;
@@ -55,7 +54,7 @@ h1{text-align:center;color:#55FFFF;margin-bottom:30px;font-size:24px}
     </div>
 </div>
 <script>
-// 5张国内稳定背景图，语法无坑，新增图片只需要在数组末尾加一行链接
+// 随机背景图
 const bgList = [
     "https://ts1.tc.mm.bing.net/th/id/R-C.6a2fd38260df4afecf35942305e4b139?rik=yGc6%2fjceSYdORA&riu=http%3a%2f%2fclubimg.club.vmall.com%2fdata%2fattachment%2fforum%2f201908%2f02%2f105037d08ouxs7rlpe8awf.jpg&ehk=Rw9vUuinRgES6VwiFyiaq9FjCw826FndfUYzhh5%2bm%2b4%3d&risl=&pid=ImgRaw&r=0",
     "https://ts1.tc.mm.bing.net/th/id/OIP-C.PV3mMELfSpi0vDnxiVBfxQHaNK?r=0&dpr=2&pid=ImgDetMain&o=7&rm=3",
@@ -63,33 +62,32 @@ const bgList = [
     "https://picx.zhimg.com/v2-38eaa90f8115355e04d795d6935afa35_r.jpg?source=1940ef5c",
     "https://pic2.zhimg.com/v2-308186f790b6f796e05ed0b996ed2107_r.jpg?source=1940ef5c"
 ];
-// 页面加载直接随机设置背景，无任何等待阻塞
 document.body.style.backgroundImage = `url(${bgList[Math.floor(Math.random() * bgList.length)]})`;
 
 const loading = document.getElementById('loading');
 const box = document.getElementById('box');
-const server = "mm.rainplay.cn:46487";
+const host = "mm.rainplay.cn";
+const port = "46487";
 
-// 线上Github Pages直接请求原生接口，去掉所有跨域代理，杜绝超时空白
-async function fetchStatus() {
+async function getData() {
     try {
-        const apiUrl = `https://uapis.cn/api/v1/game/minecraft/serverstatus?server=${encodeURIComponent(server)}`;
-        const res = await fetch(apiUrl);
-        const resData = await res.json();
-        const data = resData.data;
+        // 更换无跨域限制的mcapi.us接口，Github Pages可直接访问
+        const api = `https://mcapi.us/server/status?ip=${host}&port=${port}`;
+        const res = await fetch(api);
+        const json = await res.json();
 
         loading.style.display = "none";
         box.style.display = "block";
-        document.getElementById("ping").innerText = `${data.ping}ms`;
-        document.getElementById("v").innerText = data.version;
-        document.getElementById("p").innerText = `${data.players}/${data.max_players}`;
-        document.getElementById("m").innerText = data.motd_clean;
-    } catch (error) {
-        loading.innerText = "服务器数据获取失败，请刷新页面";
-        console.error(error);
+        document.getElementById("ping").innerText = `${json.ping}ms`;
+        document.getElementById("v").innerText = json.server.name;
+        document.getElementById("p").innerText = `${json.players.now}/${json.players.max}`;
+        document.getElementById("m").innerText = json.motd_clean;
+    } catch (err) {
+        loading.innerText = "加载失败：接口访问受限";
+        console.error(err);
     }
 }
-window.onload = fetchStatus;
+window.onload = getData;
 </script>
 </body>
 </html>
