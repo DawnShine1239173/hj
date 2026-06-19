@@ -54,7 +54,7 @@ h1{text-align:center;color:#55FFFF;margin-bottom:30px;font-size:24px}
     </div>
 </div>
 <script>
-// 随机背景图（和原版完全一致）
+// 随机背景图
 const bgList = [
     "https://ts1.tc.mm.bing.net/th/id/R-C.6a2fd38260df4afecf35942305e4b139?rik=yGc6%2fjceSYdORA&riu=http%3a%2f%2fclubimg.club.vmall.com%2fdata%2fattachment%2fforum%2f201908%2f02%2f105037d08ouxs7rlpe8awf.jpg&ehk=Rw9vUuinRgES6VwiFyiaq9FjCw826FndfUYzhh5%2bm%2b4%3d&risl=&pid=ImgRaw&r=0",
     "https://ts1.tc.mm.bing.net/th/id/OIP-C.PV3mMELfSpi0vDnxiVBfxQHaNK?r=0&dpr=2&pid=ImgDetMain&o=7&rm=3",
@@ -66,12 +66,10 @@ document.body.style.backgroundImage = `url(${bgList[Math.floor(Math.random() * b
 
 const loading = document.getElementById('loading');
 const box = document.getElementById('box');
-// 仅填写域名，全程不暴露数字IP
 const serverAddr = "mm.rainplay.cn:46487";
 
 async function getData() {
     try {
-        // 更换安全无IP泄露API：mcstatus.io Java版接口
         const api = `https://api.mcstatus.io/v2/status/java/${serverAddr}`;
         const res = await fetch(api);
         const json = await res.json();
@@ -79,9 +77,9 @@ async function getData() {
         loading.style.display = "none";
         box.style.display = "block";
 
-        // 填充对应数据
-        document.getElementById("ping").innerText = `${json.latency}ms`;
-        document.getElementById("v").innerText = json.version.name;
+        // 修正字段，不再undefined
+        document.getElementById("ping").innerText = `${json.ping}ms`;
+        document.getElementById("v").innerText = json.version.name_clean;
         document.getElementById("p").innerText = `${json.players.online}/${json.players.max}`;
         document.getElementById("m").innerText = json.motd.clean;
     } catch (err) {
@@ -91,8 +89,8 @@ async function getData() {
 }
 
 window.onload = getData;
-// 每60秒自动刷新一次，缩短人数延迟
-setInterval(getData, 60000);
+// 30秒刷新一次，人数更新更快
+setInterval(getData, 30000);
 </script>
 </body>
 </html>
